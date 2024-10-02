@@ -30,7 +30,7 @@ class Media(Document):
     class Meta:
         collection_name = COLLECTION_NAME
 
-
+"""
 async def save_file(media):
     file_id, file_ref = unpack_new_file_id(media.file_id)
     file_name = re.sub(r"@\w+|(_|\-|\.|\+)", " ", str(media.file_name))
@@ -55,7 +55,33 @@ async def save_file(media):
         else:
             logger.info(str(getattr(media, "file_name", "NO FILE NAME")) + " is saved in database")
             return True, 1
+"""
+async def save_file(media):
+    """Save file in database"""
 
+    # TODO: Find better way to get same file_id for same media to avoid duplicates
+    file_id = unpack_new_file_id(media.file_id)
+    file_name = re.sub(r"@\w+|(_|\-|\.|\+)", " ", str(media.file_name))
+    file_caption = re.sub(r"@\w+|(_|\-|\.|\+)", " ", str(media.caption))
+    try:
+        file = Media(
+            file_id=file_id,
+            file_name=file_name,
+            file_size=media.file_size,
+            caption=file_caption
+        )
+    except ValidationError:
+        print(f'Saving Error - {file_name}')
+        return 'err'
+    else:
+        try:
+            await file.commit()
+        except DuplicateKeyError:      
+            print(f'Already Saved - {file_name}')
+            return 'dup'
+        else:
+            print(f'Saved - {file_name}')
+            return 'suc'
 
 
 async def get_search_results(query, file_type=None, max_results=(MAX_RIST_BTNS), offset=0, filter=False):
