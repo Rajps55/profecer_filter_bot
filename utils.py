@@ -20,6 +20,7 @@ START_CHAR = ('\'', '"', SMART_OPEN)
 
 # temp db for banned 
 class temp(object):
+    START_TIME = 0
     BANNED_USERS = []
     BANNED_CHATS = []
     CURRENT = 0
@@ -160,15 +161,15 @@ async def get_settings(group_id):
     settings = temp.SETTINGS.get(group_id)
     if not settings:
         settings = await db.get_settings(group_id)
-        temp.SETTINGS[group_id] = settings
+        temp.SETTINGS.update({group_id: settings})
     return settings
     
 async def save_group_settings(group_id, key, value):
     current = await get_settings(group_id)
-    current[key] = value
-    temp.SETTINGS[group_id] = current
+    current.update({key: value})
+    temp.SETTINGS.update({group_id: current})
     await db.update_settings(group_id, current)
-   
+
 def get_size(size):
     units = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB"]
     size = float(size)
