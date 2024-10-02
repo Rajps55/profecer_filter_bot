@@ -20,7 +20,6 @@ START_CHAR = ('\'', '"', SMART_OPEN)
 
 # temp db for banned 
 class temp(object):
-    START_TIME = 0
     BANNED_USERS = []
     BANNED_CHATS = []
     CURRENT = 0
@@ -161,15 +160,15 @@ async def get_settings(group_id):
     settings = temp.SETTINGS.get(group_id)
     if not settings:
         settings = await db.get_settings(group_id)
-        temp.SETTINGS.update({group_id: settings})
+        temp.SETTINGS[group_id] = settings
     return settings
     
 async def save_group_settings(group_id, key, value):
     current = await get_settings(group_id)
-    current.update({key: value})
-    temp.SETTINGS.update({group_id: current})
+    current[key] = value
+    temp.SETTINGS[group_id] = current
     await db.update_settings(group_id, current)
-
+   
 def get_size(size):
     units = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB"]
     size = float(size)
@@ -323,12 +322,20 @@ async def get_shortlink(link):
 
 # from Midukki-RoBoT
 def extract_time(time_val):
+    # Ensure time_val is either string or convert to string if it's numeric
+    if isinstance(time_val, (float, int)):
+        time_val = str(int(time_val))
+    elif not isinstance(time_val, str):
+        return None
+
     if any(time_val.endswith(unit) for unit in ("s", "m", "h", "d")):
         unit = time_val[-1]
-        time_num = time_val[:-1]  # type: str
+        time_num = time_val[:-1]  # Extract the numeric part
+
         if not time_num.isdigit():
             return None
 
+        # Use timedelta based on unit
         if unit == "s":
             bantime = datetime.now() + timedelta(seconds=int(time_num)) 
         elif unit == "m":
@@ -338,12 +345,10 @@ def extract_time(time_val):
         elif unit == "d":
             bantime = datetime.now() + timedelta(days=int(time_num))
         else:
-            # how even...?
             return None
         return bantime
     else:
         return None
-
 
 async def admin_check(message: Message) -> bool:
     if not message.from_user: return False
