@@ -93,12 +93,25 @@ async def start(client, message):
         sts = await message.reply("PLEASE WAIT......")
         file_id = data.split("-", 1)[1]
         msgs = BATCH_FILES.get(file_id)
+        """
         if not msgs:
             file = await client.download_media(file_id)
             try: 
                 with open(file) as file_data:
                     msgs=json.loads(file_data.read())
             except:
+                await sts.edit("FAILED")
+                return await client.send_message(LOG_CHANNEL, "UNABLE TO OPEN FILE.")
+            os.remove(file)
+            """
+            
+        if not msgs:
+            file = await client.download_media(file_id)
+            try:
+                with open(file) as file_data:
+                    msgs = json.loads(file_data.read())
+            except Exception as e:
+                logger.error(f"Failed to read file {file}. Error: {e}")
                 await sts.edit("FAILED")
                 return await client.send_message(LOG_CHANNEL, "UNABLE TO OPEN FILE.")
             os.remove(file)
