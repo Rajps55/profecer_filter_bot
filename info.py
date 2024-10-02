@@ -37,7 +37,7 @@ AUTH_CHANNEL = int(auth_channel) if auth_channel and id_pattern.search(auth_chan
 AUTH_GROUPS = [int(ch) for ch in auth_grp.split()] if auth_grp else None
 
 # MongoDB connection
-DATABASE_URL = environ.get('DATABASE_URL', "mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority")  
+DATABASE_URL = environ.get('DATABASE_URL', "mongodb+srv://RP44:RZoUNws5PGcZroT6@rajps33.a0tsf.mongodb.net/?retryWrites=true&w=majority&appName=Rajps33")  
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set correctly.")
     
