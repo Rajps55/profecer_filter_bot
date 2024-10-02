@@ -6,7 +6,7 @@ from pyrogram import Client, filters, enums
 from pyrogram.errors import ChatAdminRequired, FloodWait
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from database.ia_filterdb import Media, get_file_details, unpack_new_file_id
-from info import CHANNELS, ADMINS, AUTH_CHANNEL, LOG_CHANNEL, PICS, BATCH_FILE_CAPTION, CUSTOM_FILE_CAPTION, PROTECT_CONTENT, START_MESSAGE, FORCE_SUB_TEXT, SUPPORT_CHAT
+from info import CHANNELS, ADMINS, AUTH_CHANNEL, LOG_CHANNEL, PICS, BATCH_FILE_CAPTION, CUSTOM_FILE_CAPTION, PROTECT_CONTENT, START_MESSAGE, FORCE_SUB_TEXT, SUPPORT_CHAT, INDEX_CHANNELS
 from utils import get_settings, get_size, is_subscribed, save_group_settings, temp
 from database.connections_mdb import active_connection
 
@@ -205,24 +205,21 @@ async def start(client, message):
                     
 
 
-@Client.on_message(filters.command('channel') & filters.user(ADMINS))
-async def channel_info(bot, message):
-    if isinstance(CHANNELS, (int, str)): channels = [CHANNELS]
-    elif isinstance(CHANNELS, list): channels = CHANNELS
-    else: raise ValueError("Unexpected Type Of CHANNELS")
-    text = '📑 **Indexed channels/groups**\n'
-    for channel in channels:
-        chat = await bot.get_chat(channel)
-        if chat.username: text += '\n@' + chat.username
-        else: text += '\n' + chat.title or chat.first_name
-    text += f'\n\n**Total:** {len(CHANNELS)}'
-    if len(text) < 4096: await message.reply(text)
-    else:
-        file = 'Indexed channels.txt'
-        with open(file, 'w') as f:
-            f.write(text)
-        await message.reply_document(file)
-        os.remove(file)
+@Client.on_message(filters.command('index_channels'))
+async def channels_info(bot, message):
+    user_id = message.from_user.id
+    if user_id not in ADMINS:
+        await message.delete()
+        return
+    ids = INDEX_CHANNELS
+    if not ids:
+        return await message.reply("Not set INDEX_CHANNELS")
+    text = '**Indexed Channels:**\n\n'
+    for id in ids:
+        chat = await bot.get_chat(id)
+        text += f'{chat.title}\n'
+    text += f'\n**Total:** {len(ids)}'
+    await message.reply(text)
 
 
 @Client.on_message(filters.command('delete') & filters.user(ADMINS))
@@ -255,14 +252,21 @@ async def delete(bot, message):
             else: await msg.edit('File Not Found In Database')
 
 
-@Client.on_message(filters.command('deleteall') & filters.user(ADMINS))
+@Client.on_message(filters.command('delete_all'))
 async def delete_all_index(bot, message):
-    button = [[
-        InlineKeyboardButton("YES", callback_data="autofilter_delete")
-        ],[
-        InlineKeyboardButton("CANCEL", callback_data="close_data")
+    user_id = message.from_user.id
+    if user_id not in ADMINS:
+        await message.delete()
+        return
+    btn = [[
+        InlineKeyboardButton(text="YES", callback_data="delete_all")
+    ],[
+        InlineKeyboardButton(text="CLOSE", callback_data="close_data")
     ]]
-    await message.reply_text('This Will Delete All Indexed Files.\ndo You Want To Continue??', quote=True, reply_markup=InlineKeyboardMarkup(button))
+    files = await Media.count_documents()
+    if int(files) == 0:
+        return await message.reply_text('Not have files to delete')
+    await message.reply_text(f'Total {files} files have.\nDo you want to delete all?', reply_markup=InlineKeyboardMarkup(btn))
             
 
 @Client.on_callback_query(filters.regex(r'^autofilter_delete'))
