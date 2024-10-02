@@ -128,7 +128,21 @@ async def get_poster(query, bulk=False, id=False, file=None):
         'rating': str(movie.get("rating")),
         'url':f'https://www.imdb.com/title/tt{movieid}'
     }
-   
+async def admin_check(message: Message) -> bool:
+    if not message.from_user: return False
+    if message.chat.type not in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]: return False
+    if message.from_user.id in [777000, 1087968824]: return True
+    client = message._client
+    chat_id = message.chat.id
+    user_id = message.from_user.id
+    check_status = await client.get_chat_member(chat_id=chat_id,user_id=user_id)
+    admin_strings = [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
+    if check_status.status not in admin_strings: return False
+    else: return True
+
+async def admin_filter(filt, client, message):
+    return await admin_check(message)
+
 def list_to_str(k):
     if not k: return "N/A"
     elif len(k) == 1: return str(k[0])
@@ -370,19 +384,3 @@ async def get_seconds(time_string):
         return value * 86400 * 365
     else:
         return 0
-
-
-async def admin_check(message: Message) -> bool:
-    if not message.from_user: return False
-    if message.chat.type not in [enums.ChatType.GROUP, enums.ChatType.SUPERGROUP]: return False
-    if message.from_user.id in [777000, 1087968824]: return True
-    client = message._client
-    chat_id = message.chat.id
-    user_id = message.from_user.id
-    check_status = await client.get_chat_member(chat_id=chat_id,user_id=user_id)
-    admin_strings = [enums.ChatMemberStatus.OWNER, enums.ChatMemberStatus.ADMINISTRATOR]
-    if check_status.status not in admin_strings: return False
-    else: return True
-
-async def admin_filter(filt, client, message):
-    return await admin_check(message)
