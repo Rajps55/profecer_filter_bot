@@ -6,7 +6,7 @@ from pyrogram.errors.exceptions.bad_request_400 import ChannelInvalid, ChatAdmin
 from info import ADMINS, LOG_CHANNEL, INDEX_EXTENSIONS
 from database.ia_filterdb import save_file
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
-from utils import temp, get_readable_time
+from utils import temp, extract_time
 import re, time
 
 lock = asyncio.Lock()
@@ -89,7 +89,7 @@ async def index_files_to_db(lst_msg_id, chat, msg, bot, skip):
     async with lock:
         try:
             async for message in bot.iter_messages(chat, lst_msg_id, skip):
-                time_taken = get_readable_time(time.time()-start_time)
+                time_taken = extract_time(time.time()-start_time)
                 if temp.CANCEL:
                     temp.CANCEL = False
                     await msg.edit(f"Successfully Cancelled!\nCompleted in {time_taken}\n\nSaved <code>{total_files}</code> files to Database!\nDuplicate Files Skipped: <code>{duplicate}</code>\nDeleted Messages Skipped: <code>{deleted}</code>\nNon-Media messages skipped: <code>{no_media + unsupported}</code>\nUnsupported Media: <code>{unsupported}</code>\nErrors Occurred: <code>{errors}</code>\nBad Files Ignoref: <code>{badfiles}</code>")
