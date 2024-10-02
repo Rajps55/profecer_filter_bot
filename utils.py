@@ -6,6 +6,7 @@ from info import AUTH_CHANNEL, LONG_IMDB_DESCRIPTION, MAX_LIST_ELM, SHORT_URL, S
 from imdb import Cinemagoer
 from typing import Union, List
 from datetime import datetime, timedelta
+import pytz
 from database.users_chats_db import db
 from bs4 import BeautifulSoup
 
@@ -321,34 +322,54 @@ async def get_shortlink(link):
 
 
 # from Midukki-RoBoT
-def extract_time(time_val):
-    # Ensure time_val is either string or convert to string if it's numeric
-    if isinstance(time_val, (float, int)):
-        time_val = str(int(time_val))
-    elif not isinstance(time_val, str):
-        return None
+def extract_time(seconds):
+    periods = [('d', 86400), ('h', 3600), ('m', 60), ('s', 1)]
+    result = ''
+    for period_name, period_seconds in periods:
+        if seconds >= period_seconds:
+            period_value, seconds = divmod(seconds, period_seconds)
+            result += f'{int(period_value)}{period_name}'
+    return result
 
-    if any(time_val.endswith(unit) for unit in ("s", "m", "h", "d")):
-        unit = time_val[-1]
-        time_num = time_val[:-1]  # Extract the numeric part
-
-        if not time_num.isdigit():
-            return None
-
-        # Use timedelta based on unit
-        if unit == "s":
-            bantime = datetime.now() + timedelta(seconds=int(time_num)) 
-        elif unit == "m":
-            bantime = datetime.now() + timedelta(minutes=int(time_num))
-        elif unit == "h":
-            bantime = datetime.now() + timedelta(hours=int(time_num))
-        elif unit == "d":
-            bantime = datetime.now() + timedelta(days=int(time_num))
-        else:
-            return None
-        return bantime
+def get_wish():
+    tz = pytz.timezone('Asia/Colombo')
+    time = datetime.now(tz)
+    now = time.strftime("%H")
+    if now < "12":
+        status = "ɢᴏᴏᴅ ᴍᴏʀɴɪɴɢ 🌞"
+    elif now < "18":
+        status = "ɢᴏᴏᴅ ᴀꜰᴛᴇʀɴᴏᴏɴ 🌗"
     else:
-        return None
+        status = "ɢᴏᴏᴅ ᴇᴠᴇɴɪɴɢ 🌘"
+    return status
+    
+async def get_seconds(time_string):
+    def extract_value_and_unit(ts):
+        value = ""
+        unit = ""
+        index = 0
+        while index < len(ts) and ts[index].isdigit():
+            value += ts[index]
+            index += 1
+        unit = ts[index:]
+        if value:
+            value = int(value)
+        return value, unit
+    value, unit = extract_value_and_unit(time_string)
+    if unit == 's':
+        return value
+    elif unit == 'min':
+        return value * 60
+    elif unit == 'hour':
+        return value * 3600
+    elif unit == 'day':
+        return value * 86400
+    elif unit == 'month':
+        return value * 86400 * 30
+    elif unit == 'year':
+        return value * 86400 * 365
+    else:
+        return 0
 
 async def admin_check(message: Message) -> bool:
     if not message.from_user: return False
