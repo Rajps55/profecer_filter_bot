@@ -33,8 +33,8 @@ AUTH_GROUPS = [int(ch) for ch in auth_grp.split()] if auth_grp else None
 # MongoDB information
 DATABASE_URL = environ.get('DATABASE_URL', "mongodb+srv://ayushpritysingh098:z0aMVL9ofTSOGqir@cluster0.9r9gs.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0")  # Placeholder: MongoDB URL
 DATABASE_NAME = environ.get('DATABASE_NAME', "Cluster0")  # Placeholder: MongoDB database का नाम
-FILE_DB_URL = environ.get("FILE_DB_URL", 'https://t.me/+kuFmmOGvyRNmMzY1')  # Placeholder: File database URL
-FILE_DB_NAME = environ.get("FILE_DB_NAME", 'Store_fileDB_ch')  # Placeholder: File database का नाम
+FILE_DB_URL = environ.get("FILE_DB_URL", '')  # Placeholder: File database URL
+FILE_DB_NAME = environ.get("FILE_DB_NAME", '')  # Placeholder: File database का नाम
 COLLECTION_NAME = environ.get('COLLECTION_NAME', 'Telegram_files')  # Placeholder: MongoDB collection का नाम
 
 # Filters Configuration 
